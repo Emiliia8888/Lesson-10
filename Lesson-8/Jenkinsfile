@@ -1,0 +1,46 @@
+pipeline {
+    agent {
+        kubernetes {
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  serviceAccountName: jenkins-sa # Використовуйте IRSA для доступу до ECR
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command: ["/busybox/cat"]
+    tty: true
+  - name: helm-git
+    image: alpine/git
+    command: ["/bin/sh", "-c"]
+    args: ["while true; do sleep 30; done;"]
+'''
+        }
+    }
+    stages {
+        stage('Build and Push') {
+            steps {
+                container('kaniko') {
+                    sh "/kaniko/executor --context=${WORKSPACE} --dockerfile=Dockerfile --destination=ВАШ_ECR_РЕПО:${BUILD_NUMBER}"
+                }
+            }
+        }
+        stage('Update Helm Chart') {
+            steps {
+                container('helm-git') {
+                    script {
+                        // Налаштування Git (потрібно додати SSH key через Jenkins Credentials)
+                        sshagent(['git-ssh-key']) {
+                            sh "git config user.email 'jenkins@example.com'"
+                            sh "git config user.name 'Jenkins'"
+                            sh "yq eval '.image.tag = \"${BUILD_NUMBER}\"' -i values.yaml"
+                            sh "git add values.yaml && git commit -m 'Update tag to ${BUILD_NUMBER}'"
+                            sh "git push origin main"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

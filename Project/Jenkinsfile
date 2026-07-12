@@ -1,0 +1,163 @@
+pipeline {
+
+    agent {
+        kubernetes {
+            yaml
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:latest
+    command:
+      - /busybox/cat
+    tty: true
+
+  - name: git
+    image: alpine/git
+    command:
+      - cat
+    tty: true
+
+        }
+    }
+
+    environment {
+
+        AWS_REGION = "us-east-1"
+
+        ECR_REPO = "034255117140.dkr.ecr.us-east-1.amazonaws.com/lesson-8-9"
+
+        GIT_REPO = "https://github.com/Emiliia8888/Lesson-8-9.git"
+
+        HELM_REPO = "https://github.com/Emiliia8888/helm-django.git"
+
+        IMAGE_TAG = "${BUILD_NUMBER}"
+    }
+
+    stages {
+
+        stage('Checkout Repository') {
+
+            steps {
+
+                container('git') {
+
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'github-creds',
+                            usernameVariable: 'GIT_USER',
+                            passwordVariable: 'GIT_TOKEN'
+                        )
+                    ]) {
+
+                        sh """
+                        git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/Emiliia8888/Lesson-8-9.git .
+
+                        git checkout main
+                        """
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        stage('Build Docker Image') {
+
+            steps {
+
+                container('kaniko') {
+
+                    withCredentials([
+                        [$class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'aws-creds']
+                    ]) {
+
+                        sh """
+
+                        mkdir -p /kaniko/.docker
+
+                        echo '{
+                          "credsStore":"ecr-login"
+                        }' > /kaniko/.docker/config.json
+
+                        /kaniko/executor \
+                          --context=dir://. \
+                          --dockerfile=Dockerfile \
+                          --destination=${ECR_REPO}:${IMAGE_TAG}
+
+                        """
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        stage('Update Helm Values') {
+
+            steps {
+
+                container('git') {
+
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'github-creds',
+                            usernameVariable: 'GIT_USER',
+                            passwordVariable: 'GIT_TOKEN'
+                        )
+                    ]) {
+
+                        sh """
+
+                        rm -rf helm-django
+
+                        git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/Emiliia8888/helm-django.git
+
+                        cd helm-django
+
+                        sed -i "s/tag:.*/tag: ${IMAGE_TAG}/g" charts/django-app/values.yaml
+
+                        git config user.email "jenkins@example.com"
+                        git config user.name "Jenkins"
+
+                        git add charts/django-app/values.yaml
+
+                        git commit -m "Update image tag ${IMAGE_TAG}" || true
+
+                        git push origin main
+
+                        """
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+    post {
+
+        success {
+
+            echo "Deployment update completed successfully"
+
+        }
+
+        failure {
+
+            echo "Pipeline failed"
+
+        }
+
+    }
+
+}
