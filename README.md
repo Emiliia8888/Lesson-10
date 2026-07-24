@@ -232,6 +232,72 @@ django-rds-instance.ctskymysi6zv.eu-central-1.rds.amazonaws.com:5432
 
 ---
 
+
+## RDS Module Configuration
+
+The RDS module is implemented as a universal database module.
+
+Location:
+
+modules/rds/
+
+The database type is controlled by:
+
+use_aurora = false
+
+
+### Supported Variables
+
+The module supports:
+
+- use_aurora
+- identifier
+- cluster_identifier
+- writer_identifier
+- allocated_storage
+- storage_type
+- parameter_group_family
+
+### Standard RDS Mode
+
+When:
+
+use_aurora = false
+
+
+The module creates:
+
+- aws_db_instance
+- aws_db_subnet_group
+- aws_security_group
+- aws_db_parameter_group
+
+### Aurora Mode
+
+When:
+
+use_aurora = true
+
+
+The module creates:
+
+- aws_rds_cluster
+- aws_rds_cluster_instance
+- aws_db_subnet_group
+- aws_security_group
+- aws_rds_cluster_parameter_group
+
+### Changing Database Type
+
+To switch between Standard RDS and Aurora:
+
+1. Change the use_aurora variable.
+2. Run Terraform plan.
+3. Review infrastructure changes.
+4. Apply Terraform configuration.
+
+The module keeps shared networking resources and parameter configuration separated from database engine implementation.
+
 # Secrets Management
 
 Implemented:

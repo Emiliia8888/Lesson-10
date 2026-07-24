@@ -85,3 +85,39 @@ variable "skip_final_snapshot" {
   type        = bool
   default     = false
 }
+
+variable "parameter_group_family" {
+  description = "Database parameter group family"
+  type        = string
+  default     = "postgres16"
+}
+
+variable "identifier" {
+  description = "RDS instance identifier"
+  type        = string
+  default     = "django-rds-instance"
+}
+
+variable "cluster_identifier" {
+  description = "Aurora cluster identifier"
+  type        = string
+  default     = "django-aurora-cluster"
+}
+
+variable "writer_identifier" {
+  description = "Aurora writer instance identifier"
+  type        = string
+  default     = "django-aurora-writer"
+}
+
+variable "allocated_storage" {
+  description = "Allocated storage size in GB"
+  type        = number
+  default     = 20
+}
+
+variable "storage_type" {
+  description = "Storage type"
+  type        = string
+  default     = "gp3"
+}

@@ -1,7 +1,7 @@
 resource "aws_rds_cluster" "this" {
   count = var.use_aurora ? 1 : 0
 
-  cluster_identifier = "django-aurora-cluster"
+  cluster_identifier = var.cluster_identifier
 
   engine         = var.engine
   engine_version = var.engine_version
@@ -13,7 +13,7 @@ resource "aws_rds_cluster" "this" {
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [aws_security_group.this.id]
 
-  db_cluster_parameter_group_name = aws_db_parameter_group.this.name
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.cluster[0].name
 
   skip_final_snapshot = true
 
@@ -26,7 +26,7 @@ resource "aws_rds_cluster" "this" {
 resource "aws_rds_cluster_instance" "writer" {
   count = var.use_aurora ? 1 : 0
 
-  identifier = "django-aurora-writer"
+  identifier = var.writer_identifier
 
   cluster_identifier = aws_rds_cluster.this[0].id
 

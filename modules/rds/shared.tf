@@ -36,7 +36,7 @@ resource "aws_security_group" "this" {
 
 resource "aws_db_parameter_group" "this" {
   name   = "django-rds-parameter-group"
-  family = "postgres16"
+  family = var.parameter_group_family
 
   parameter {
     name  = "log_connections"
@@ -45,5 +45,22 @@ resource "aws_db_parameter_group" "this" {
 
   tags = {
     Name = "django-rds-parameter-group"
+  }
+}
+
+
+resource "aws_rds_cluster_parameter_group" "cluster" {
+  count = var.use_aurora ? 1 : 0
+
+  name   = "django-aurora-cluster-parameter-group"
+  family = var.parameter_group_family
+
+  parameter {
+    name  = "log_connections"
+    value = "1"
+  }
+
+  tags = {
+    Name = "django-aurora-cluster-parameter-group"
   }
 }
