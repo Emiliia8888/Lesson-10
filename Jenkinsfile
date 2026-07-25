@@ -34,8 +34,6 @@ spec:
         {
           "auths": {
             "\${ECR_REGISTRY}": {
-              "username": "AWS",
-              "password": "\$PASS",
               "auth": "\$AUTH"
             }
           }
