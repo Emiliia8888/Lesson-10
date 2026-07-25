@@ -12,75 +12,75 @@ metadata:
 
 spec:
 
+  serviceAccountName: jenkins
+
   securityContext:
     fsGroup: 1000
 
-  serviceAccountName: jenkins
+  initContainers:
+
+  - name: ecr-login
+    image: amazon/aws-cli:latest
+    command:
+      - sh
+      - -c
+    args:
+      - |
+        aws ecr get-login-password --region ${AWS_REGION} > /tmp/pass
+        mkdir -p /kaniko/.docker
+        echo '{"auths":{"'${ECR_REGISTRY}'":{"username":"AWS","password":"'$(cat /tmp/pass)'","auth":"'$(echo -n AWS:$(cat /tmp/pass) | base64)'"}}}' > /kaniko/.docker/config.json
+    env:
+      - name: AWS_REGION
+        value: "eu-central-1"
+      - name: ECR_REGISTRY
+        value: "034255117140.dkr.ecr.eu-central-1.amazonaws.com"
+    volumeMounts:
+      - name: docker-config
+        mountPath: /kaniko/.docker
 
   containers:
 
   - name: git
     image: alpine/git:latest
     command:
-    - cat
+      - cat
     tty: true
     volumeMounts:
-    - name: workspace-volume
-      mountPath: /home/jenkins/agent
-
+      - name: workspace-volume
+        mountPath: /home/jenkins/agent
 
   - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
     command:
-    - /busybox/cat
+      - /busybox/cat
     tty: true
-
     volumeMounts:
-    - name: workspace-volume
-      mountPath: /home/jenkins/agent
-
-    - name: docker-config
-      mountPath: /kaniko/.docker
-
-
-  - name: aws
-    image: amazon/aws-cli:latest
-    command:
-    - cat
-    tty: true
-
-    volumeMounts:
-    - name: workspace-volume
-      mountPath: /home/jenkins/agent
-
+      - name: workspace-volume
+        mountPath: /home/jenkins/agent
+      - name: docker-config
+        mountPath: /kaniko/.docker
 
   volumes:
+    - name: workspace-volume
+      emptyDir: {}
 
-  - name: workspace-volume
-    emptyDir: {}
-
-  - name: docker-config
-    emptyDir: {}
-
+    - name: docker-config
+      emptyDir: {}
 """
         }
     }
-
 
     environment {
 
         AWS_REGION = "eu-central-1"
 
-        ECR_REPOSITORY =
-        "034255117140.dkr.ecr.eu-central-1.amazonaws.com/django-app"
+        ECR_REPOSITORY = "034255117140.dkr.ecr.eu-central-1.amazonaws.com/django-app-gitops"
 
         IMAGE_TAG = "${BUILD_NUMBER}"
 
     }
 
-
     stages {
-
 
         stage('Checkout Application') {
 
@@ -92,7 +92,6 @@ spec:
                     echo "Using Declarative SCM checkout"
 
                     ls -la
-
                     '''
 
                 }
@@ -100,8 +99,6 @@ spec:
             }
 
         }
-
-
 
         stage('Validate Project') {
 
@@ -114,11 +111,9 @@ spec:
                     echo "Checking project..."
 
                     test -f Dockerfile
-
                     echo "Dockerfile found."
 
                     test -f requirements.txt
-
                     echo "requirements.txt found."
 
                     '''
@@ -128,9 +123,6 @@ spec:
             }
 
         }
-
-
-
 
         stage('Build Docker Image with Kaniko') {
 
@@ -143,9 +135,9 @@ spec:
                     echo "Building image..."
 
                     /kaniko/executor \
-                    --dockerfile=Dockerfile \
-                    --context=$WORKSPACE \
-                    --destination=${ECR_REPOSITORY}:${IMAGE_TAG}
+                      --dockerfile=Dockerfile \
+                      --context=$WORKSPACE \
+                      --destination=${ECR_REPOSITORY}:${IMAGE_TAG}
 
                     '''
 
@@ -155,48 +147,49 @@ spec:
 
         }
 
+        stage('Update Helm Values') {
 
+            steps {
 
+                container('git') {
 
-stage('Update Helm Values') {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'github-creds',
+                        usernameVariable: 'GIT_USERNAME',
+                        passwordVariable: 'GIT_PASSWORD'
+                    )]) {
 
-    steps {
+                        sh '''
 
-        container('git') {
+                        echo "Cloning repository for GitOps update"
 
-            withCredentials([usernamePassword(
-                credentialsId: 'github-creds',
-                usernameVariable: 'GIT_USERNAME',
-                passwordVariable: 'GIT_PASSWORD'
-            )]) {
+                        rm -rf gitops-repo
 
-                sh '''
+                        git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Emiliia8888/Lesson-8-9.git gitops-repo
 
-                echo "Cloning repository for GitOps update"
+                        cd gitops-repo
 
-                rm -rf gitops-repo
+                        echo "Updating image tag..."
 
-                git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Emiliia8888/Lesson-8-9.git gitops-repo
+                        sed -i "s/tag: .*/tag: ${IMAGE_TAG}/" charts/django-app/values.yaml
 
-                cd gitops-repo
+                        echo "Current values.yaml:"
+                        cat charts/django-app/values.yaml
 
-                                echo "Updating image tag..."
+                        git config user.email "jenkins@localhost"
+                        git config user.name "Jenkins"
 
-                sed -i "s/tag: .*/tag: ${IMAGE_TAG}/" charts/django-app/values.yaml
+                        git add charts/django-app/values.yaml
 
-                echo "Current values.yaml:"
-                cat charts/django-app/values.yaml
+                        git commit -m "Update django image tag to ${IMAGE_TAG}" || echo "No changes"
 
-                git config user.email "jenkins@localhost"
-                git config user.name "Jenkins"
+                        git push origin HEAD:main
 
-                git add charts/django-app/values.yaml
+                        '''
 
-                git commit -m "Update django image tag to ${IMAGE_TAG}" || echo "No changes"
+                    }
 
-                git push origin HEAD:main
-
-                '''
+                }
 
             }
 
@@ -204,14 +197,7 @@ stage('Update Helm Values') {
 
     }
 
-}
-
-
-
-}
-
     post {
-
 
         always {
 
@@ -229,15 +215,11 @@ stage('Update Helm Values') {
 
         }
 
-
-
         success {
 
             echo "Pipeline completed successfully."
 
         }
-
-
 
         failure {
 
@@ -245,8 +227,6 @@ stage('Update Helm Values') {
 
         }
 
-
     }
-
 
 }
