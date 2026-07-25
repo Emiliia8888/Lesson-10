@@ -1,6 +1,6 @@
 image:
   repository: "034255117140.dkr.ecr.eu-central-1.amazonaws.com/django-app-gitops"
-  tag: 25
+  tag: 32
   pullPolicy: Always
 
 replicaCount: 1
@@ -11,7 +11,7 @@ postgresql:
   enabled: true
 
   image:
-    tag: latest
+    tag: 32
 
   primary:
     networkPolicy:
