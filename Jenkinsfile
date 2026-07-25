@@ -148,8 +148,8 @@ spec:
 
                     /kaniko/executor \
                       --dockerfile=Dockerfile \
-                      --context=$WORKSPACE \
-                      --destination=${ECR_REPOSITORY}:${IMAGE_TAG}
+                      --context=$$WORKSPACE \
+                      --destination=$${ECR_REPOSITORY}:$${IMAGE_TAG}
 
                     '''
 
@@ -177,13 +177,13 @@ spec:
 
                         rm -rf gitops-repo
 
-                        git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Emiliia8888/Lesson-8-9.git gitops-repo
+                        git clone https://$${GIT_USERNAME}:$${GIT_PASSWORD}@github.com/Emiliia8888/Lesson-8-9.git gitops-repo
 
                         cd gitops-repo
 
                         echo "Updating image tag..."
 
-                        sed -i "s/tag: .*/tag: ${IMAGE_TAG}/" charts/django-app/values.yaml
+                        sed -i "s/tag: .*/tag: $${IMAGE_TAG}/" charts/django-app/values.yaml
 
                         echo "Current values.yaml:"
                         cat charts/django-app/values.yaml
@@ -193,7 +193,7 @@ spec:
 
                         git add charts/django-app/values.yaml
 
-                        git commit -m "Update django image tag to ${IMAGE_TAG}" || echo "No changes"
+                        git commit -m "Update django image tag to $${IMAGE_TAG}" || echo "No changes"
 
                         git push origin HEAD:main
 
@@ -219,7 +219,7 @@ spec:
 
                 echo "Cleaning workspace permissions"
 
-                chmod -R u+rwX,g+rwX,o+rwX $WORKSPACE || true
+                chmod -R u+rwX,g+rwX,o+rwX $$WORKSPACE || true
 
                 '''
 
