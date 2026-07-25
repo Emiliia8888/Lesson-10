@@ -26,17 +26,17 @@ spec:
       - -c
     args:
       - |
-        aws ecr get-login-password --region $${AWS_REGION} > /tmp/pass
+        aws ecr get-login-password --region \${AWS_REGION} > /tmp/pass
         mkdir -p /kaniko/.docker
-        PASS=$$(cat /tmp/pass)
-        AUTH=$$(echo -n AWS:$$PASS | base64)
+        PASS=\$(cat /tmp/pass)
+        AUTH=\$(echo -n AWS:\$PASS | base64)
         cat > /kaniko/.docker/config.json <<EOF
         {
           "auths": {
-            "$${ECR_REGISTRY}": {
+            "\${ECR_REGISTRY}": {
               "username": "AWS",
-              "password": "$$PASS",
-              "auth": "$$AUTH"
+              "password": "\$PASS",
+              "auth": "\$AUTH"
             }
           }
         }
