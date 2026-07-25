@@ -23,7 +23,8 @@ postgresql:
                   app: django-app
 
   image:
-    tag: latest
+    tag: 16.4.0-debian-12-r15
+
   auth:
     username: django
     password: django_password
