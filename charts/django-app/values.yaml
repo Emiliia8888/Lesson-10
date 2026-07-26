@@ -1,6 +1,6 @@
 image:
   repository: "034255117140.dkr.ecr.eu-central-1.amazonaws.com/django-app-gitops"
-  tag: 32
+  tag: 34
   pullPolicy: Always
 
 replicaCount: 1
