@@ -47,9 +47,32 @@ agent:
     kaniko: |
       - name: kaniko
         label: kaniko
+
+        initContainers:
+          - name: ecr-login
+            image: amazon/aws-cli:latest
+            command:
+              - sh
+              - -c
+            args:
+              - |
+                aws ecr get-login-password --region eu-central-1 > /tmp/pass
+                mkdir -p /kaniko/.docker
+                echo '{"auths":{"034255117140.dkr.ecr.eu-central-1.amazonaws.com":{"username":"AWS","password":"'$(cat /tmp/pass)'","auth":"'$(echo -n AWS:$(cat /tmp/pass) | base64)'"}}}' > /kaniko/.docker/config.json
+            volumeMounts:
+              - name: docker-config
+                mountPath: /kaniko/.docker
+
         containers:
           - name: kaniko
             image: gcr.io/kaniko-project/executor:latest
             command: /busybox/cat
             ttyEnabled: true
             privileged: false
+            volumeMounts:
+              - name: docker-config
+                mountPath: /kaniko/.docker
+
+        volumes:
+          - name: docker-config
+            emptyDir: {}
