@@ -181,7 +181,7 @@ spec:
 
                         echo "Updating image tag..."
 
-                        sed -i "s/tag: .*/tag: ${IMAGE_TAG}/" charts/django-app/values.yaml
+                        sed -i "0,/tag: .*/s//tag: ${IMAGE_TAG}/" charts/django-app/values.yaml
 
                         echo "Current values.yaml:"
                         cat charts/django-app/values.yaml

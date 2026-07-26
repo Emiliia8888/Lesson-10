@@ -11,7 +11,7 @@ postgresql:
   enabled: true
 
   image:
-    tag: 32
+    tag: latest
 
   primary:
     networkPolicy:
