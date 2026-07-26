@@ -28,6 +28,7 @@ postgresql:
   auth:
     username: django
     password: django_password
+    postgresPassword: postgres_password
     database: django_db
 
 resources:
