@@ -12,353 +12,300 @@ This project implements a complete cloud-native deployment workflow:
 - ArgoCD GitOps deployment
 - Amazon ECR container registry
 - AWS Application Load Balancer
-- PostgreSQL database
-- AWS RDS PostgreSQL integration
+- PostgreSQL database deployed with Helm
+- AWS RDS PostgreSQL reusable infrastructure module
 - AWS Secrets Manager integration
 - External Secrets Operator
 - Kubernetes production hardening
 - Horizontal Pod Autoscaling
 
----
 
-# Architecture
+## Architecture
 
-The platform consists of the following components:
-
+```text
 Developer
-|
-v
+    |
+    v
 GitHub Repository
-|
-v
+    |
+    v
 Jenkins CI/CD
-|
-v
-Docker Build
-|
-v
+    |
+    v
+Kaniko Docker Build
+    |
+    v
 Amazon ECR
-|
-v
+    |
+    v
 ArgoCD
-|
-v
+    |
+    v
 Amazon EKS
-|
-+----------------+
-| |
-v v
-Django App PostgreSQL
-| |
-v v
-AWS ALB AWS RDS
+    |
+    +----------------+
+    |                |
+    v                v
+Django App     PostgreSQL
+                   |
+                   v
+              Kubernetes PVC
+                   |
+                   v
+              AWS EBS gp3
 
+```
 
----
-
-# Infrastructure
-
+## Infrastructure
 Infrastructure is provisioned using Terraform.
+ 
+AWS Region
 
-## AWS Region
+    eu-central-1
 
-eu-central-1
+EKS Cluster
 
-Name:
-django-gitops-cluster
-
+    django-gitops-cluster
 
 Implemented:
 
-- VPC
-- Public and private subnets
-- NAT Gateway
-- EKS Cluster
-- Managed Node Group
-- OIDC Provider
-- IRSA
-- EBS CSI Driver
-- gp3 StorageClass
+    -VPC
+    -Public and private subnets
+    -NAT Gateway
+    -EKS Cluster
+    -Managed Node Group
+    -OIDC Provider
+    -IRSA
+    -EBS CSI Driver
+    -gp3 StorageClass
 
----
-
-# Kubernetes Platform
-
-## Installed Components
-
-### Jenkins
-
-Used for CI/CD automation.
+## Kubernetes Platform
+## Jenkins
+Jenkins is used for CI/CD automation.
 
 Responsibilities:
 
-- Build Docker images
-- Push images to Amazon ECR
-- Trigger deployment workflows
+    -Checkout application source code
+    -Build Docker images using Kaniko
+    -Authenticate to Amazon ECR
+    -Push images to Amazon ECR
+    -Update Helm image tag in Git repository
 
+Jenkins Kaniko ECR Authentication
+Implemented:
 
-### ArgoCD
+    -Kubernetes Jenkins agent
+    -ecr-login initContainer
+    -AWS CLI authentication
+    -Shared /kaniko/.docker/config.json
+    -Kaniko image builder
 
-Used for GitOps deployment.
+Verification:
+
+```bash
+    kubectl get pods -n jenkins
+```
+
+Pipeline job:
+
+    django-app-pipeline
+The pipeline performs:
+
+    -Git checkout
+    -Docker image build
+    -Push image to Amazon ECR
+    -Update Helm values
+    -Commit changes to GitHub
+
+## ArgoCD
+
+ArgoCD provides GitOps deployment.
 
 Application:
 
-django-app
-
-
-Status:
-Synced
-Healthy
-
-
+    django-app
 Git repository:
-https://github.com/Emiliia8888/Lesson-8-9.git
 
-
+    https://github.com/Emiliia8888/Lesson-8-9.git
 Branch:
-main
 
+    main
+Verification:
 
----
+```bash
+    kubectl get application django-app -n argocd
+```
 
-# Application
+Expected result:
 
-## Django Application
+    NAME         SYNC STATUS   HEALTH STATUS
+    django-app   Synced        Healthy
+
+## Application
+
+Django Application
 
 Container image:
-034255117140.dkr.ecr.eu-central-1.amazonaws.com/django-app-gitops
 
+    034255117140.dkr.ecr.eu-central-1.amazonaws.com/django-app-gitops
+Current deployed image:
 
+    django-app-gitops:34
 Deployment includes:
 
-- Kubernetes Deployment
-- Services
-- Configurations
-- Health checks
-- Resource limits
-- Security hardening
+    -Kubernetes Deployment
+    -Services
+    -Configurations
+    -Health checks
+    -Resource limits
+    -SecurityContext
+    -Horizontal Pod Autoscaling
 
-Application response:
+Verification:
 
-Django app is running
+```bash
+    kubectl get deployment django-app -n default \
+    -o jsonpath='{.spec.template.spec.containers[0].image}'
+```
 
+## Production Hardening
 
----
+Implemented Kubernetes production practices.
 
-# Production Hardening
+### Container Security
+    -Non-root containers
+    -SecurityContext
+    -Seccomp profile
 
-Implemented Kubernetes production practices:
+### Availability
+    -Readiness probes
+    -Liveness probes
+    -PodDisruptionBudget
 
-## Container Security
-
-- Non-root containers
-- SecurityContext
-- Seccomp profile
-
-
-## Availability
-
-- Readiness probes
-- Liveness probes
-- PodDisruptionBudget
-
-
-## Resource Management
-
+### Resource Management
 Configured:
 
-- CPU requests
-- CPU limits
-- Memory requests
-- Memory limits
+    -CPU requests
+    -CPU limits
+    -Memory requests
+    -Memory limits
 
-
-## Networking
-
+### Networking
 Implemented:
 
-- Kubernetes NetworkPolicy
-- Private workload communication
+    -Kubernetes NetworkPolicy
+    -Private workload communication
 
----
+## Database
 
-# Database
+### PostgreSQL
+Current Django deployment uses PostgreSQL deployed through Helm dependency.
+Implemented:
 
-## PostgreSQL
+    -PostgreSQL StatefulSet
+    -PersistentVolumeClaim
+    -gp3 StorageClass
+    -AWS EBS CSI integration
 
-Kubernetes PostgreSQL workload:
+Django database connection is configured through Kubernetes Secret:
 
-- StatefulSet
-- PersistentVolumeClaim
-- StorageClass gp3
+    django-postgresql
 
+Environment variables:
+
+    -DB_HOST
+    -DB_NAME
+    -DB_USER
+    -DB_PASSWORD
+    -DB_PORT
 
 ## Amazon RDS
 
-Terraform module:
-modules/rds/
-
-
-Supports:
-
-### Standard RDS
-
-use_aurora=false
-
-Creates:
-
-- aws_db_instance
-- aws_db_subnet_group
-- aws_security_group
-- aws_db_parameter_group
-
-
-### Aurora
-use_aurora=true
-
-
-Creates:
-
-- aws_rds_cluster
-- aws_rds_cluster_instance
-
-Current deployment:
-Amazon RDS PostgreSQL
-
-
-Endpoint:
-django-rds-instance.ctskymysi6zv.eu-central-1.rds.amazonaws.com:5432
-
-
----
-
-
-## RDS Module Configuration
-
-The RDS module is implemented as a universal database module.
+Terraform includes a reusable RDS module.
 
 Location:
 
-modules/rds/
-
-The database type is controlled by:
-
-use_aurora = false
-
-
-### Supported Variables
+    modules/rds/
 
 The module supports:
 
-- use_aurora
-- identifier
-- cluster_identifier
-- writer_identifier
-- allocated_storage
-- storage_type
-- parameter_group_family
+### Standard RDS
 
-### Standard RDS Mode
+    use_aurora=false
 
-When:
+Creates:
 
-use_aurora = false
+    -aws_db_instance
+    -aws_db_subnet_group
+    -aws_security_group
+    -aws_db_parameter_group
 
+### Aurora
 
-The module creates:
+    use_aurora=true
 
-- aws_db_instance
-- aws_db_subnet_group
-- aws_security_group
-- aws_db_parameter_group
+Creates:
 
-### Aurora Mode
+    -aws_rds_cluster
+    -aws_rds_cluster_instance
+    -aws_db_subnet_group
+    -aws_security_group
+    -aws_rds_cluster_parameter_group
 
-When:
+Current Terraform RDS instance:
 
-use_aurora = true
+    django-rds-instance
 
+Endpoint:
 
-The module creates:
+    django-rds-instance.ctskymysi6zv.eu-central-1.rds.amazonaws.com:5432
 
-- aws_rds_cluster
-- aws_rds_cluster_instance
-- aws_db_subnet_group
-- aws_security_group
-- aws_rds_cluster_parameter_group
-
-### Changing Database Type
-
-To switch between Standard RDS and Aurora:
-
-1. Change the use_aurora variable.
-2. Run Terraform plan.
-3. Review infrastructure changes.
-4. Apply Terraform configuration.
-
-The module keeps shared networking resources and parameter configuration separated from database engine implementation.
-
-# Secrets Management
+## Secrets Management
 
 Implemented:
 
-- AWS Secrets Manager
-- IAM permissions
-- External Secrets Operator
-- ClusterSecretStore
-- ExternalSecret
+    -AWS Secrets Manager
+    -IAM permissions
+    -External Secrets Operator
+    -ClusterSecretStore
+    -ExternalSecret
 
-Status:
-Ready
+External Secrets infrastructure is ready.
 
+Current PostgreSQL credentials are provided through Kubernetes Secret generated by Helm PostgreSQL dependency.
 
-Secrets are synchronized automatically into Kubernetes.
+## Networking
 
----
-
-# Networking
-
-Implemented:
-
-## AWS Load Balancer Controller
+AWS Load Balancer Controller
 
 Provides:
 
-- Kubernetes Ingress integration
-- AWS ALB provisioning
+    -Kubernetes Ingress integration
+    -AWS ALB provisioning
 
+Application Load Balancer:
 
-## Application Load Balancer
+    -Public application access
+    -HTTP health checks
 
-Django application is publicly available through ALB.
+## Autoscaling
 
-Health check:
-HTTP 200
-
-
----
-
-# Autoscaling
-
-Implemented:
-
-## Metrics Server
+Metrics Server
 
 Monitoring:
 
-```bash
-kubectl top pods
+    kubectl top pods
 
-Horizontal Pod Autoscaler
+### Horizontal Pod Autoscaler
+
 Django application:
-min replicas: 1
-max replicas: 5
-CPU target: 70%
 
-Current CPU usage:
-7%
+    -Minimum replicas: 1
+    -Maximum replicas: 5
+    -CPU target: 70%
 
-Terraform Structure
+## Terraform Structure
+```text
 .
 ├── modules
 │   ├── vpc
@@ -374,77 +321,149 @@ Terraform Structure
 ├── providers.tf
 ├── main.tf
 └── variables.tf
+...
+```
 
-Terraform Validation
-Infrastructure deployment:
-terraform validate
-
-## Terraform
+## Deployment Instructions
+Terraform
 
 ```bash
-terraform init
-terraform validate
-terraform plan
-terraform apply
+Initialize:
+    terraform init
+    terraform validate
+    terraform plan
+    terraform apply
 ```
 
 Terraform manages:
-AWS infrastructure
-Kubernetes resources
-Helm releases
 
-## Helm
+    -AWS infrastructure
+    -Kubernetes resources
+    -Helm releases
 
-```bash
-helm dependency update charts/django-app
-helm template charts/django-app
-```
+### Helm
 
-## Kubernetes
+Update dependencies:
 
 ```bash
-kubectl get nodes
-kubectl get pods -A
-kubectl get svc -A
+    helm dependency update charts/django-app   
 ```
 
-## Argo CD Verification
+Validate templates:
 
 ```bash
-kubectl get application django-app -n argocd
+    helm template charts/django-app
 ```
 
-Deployment Flow
-Developer pushes code to GitHub
-Jenkins builds Docker image
-Image pushed to Amazon ECR
-ArgoCD detects changes
-Kubernetes deployment updated
-Django application becomes available through ALB
+### Kubernetes Verification
+Check cluster:
+```bash
+    kubectl get nodes
+```
 
-Technologies
-Terraform
-AWS
-Amazon EKS
-Kubernetes
-Helm
-ArgoCD
-Jenkins
-Docker
+Check workloads:
+```bash
+    kubectl get pods -A
+```
+
+Check services:
+```bash
+    kubectl get svc -A
+```
+### Jenkins Verification
+Check Jenkins:
+
+```bash
+    kubectl get pods -n jenkins
+```
+
+Run Jenkins job:
+
+    django-app-pipeline
+
+Successful pipeline includes:
+
+    -Kaniko build
+    -ECR push
+    -Git update with new image tag
+
+### ArgoCD Verification
+
+Check application status:
+
+```bash
+    kubectl get application django-app -n argocd
+```
+
+Expected:
+
+    django-app   Synced   Healthy
+
+Check deployed image:
+
+```bash
+    kubectl get deployment django-app -n default \
+    -o jsonpath='{.spec.template.spec.containers[0].image}'
+```
+
+## Deployment Flow
+
+```text
+Developer pushes code
+        |
+        v
+GitHub Repository
+        |
+        v
+Jenkins Pipeline
+        |
+        v
+Kaniko builds image
+        |
+        v
 Amazon ECR
-Amazon RDS
-PostgreSQL
-AWS Secrets Manager
-External Secrets Operator
+        |
+        v
+Jenkins updates Helm values
+        |
+        v
+ArgoCD detects changes
+        |
+        v
+Kubernetes deployment updated
+        |
+        v
+Django application available
+```
 
-Project Status
-Production-style GitOps Django platform successfully deployed.
+## Technologies
+
+    - Terraform
+    - AWS
+    - Amazon EKS
+    - Kubernetes
+    - Helm
+    - ArgoCD
+    - Jenkins
+    - Docker
+    - Kaniko
+    - Amazon ECR
+    - PostgreSQL
+    - Amazon RDS
+    - AWS Secrets Manager
+    - External Secrets Operator
+
+## Project Status
+
 Implemented:
- Infrastructure automation
- Kubernetes orchestration
- CI/CD pipeline
- GitOps workflow
- Database integration
- Secret management
- Autoscaling
- Production security practices
+
+    -Infrastructure automation
+    -Kubernetes orchestration
+    -CI/CD pipeline
+    -GitOps workflow
+    -PostgreSQL deployment
+    -Secret management infrastructure
+    -Autoscaling
+    -Kubernetes security hardening
+
+This project demonstrates a complete GitOps-based deployment workflow on AWS using Terraform, Jenkins, Kaniko, ArgoCD and Kubernetes.
