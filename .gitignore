@@ -8,7 +8,6 @@ __pycache__/
 .DS_Store
 
 # Local Terraform secrets
-secrets.tf
 .idea/
 
 # Local Terraform variables
