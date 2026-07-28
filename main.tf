@@ -83,7 +83,7 @@ module "rds" {
 
   database_name   = "django"
   master_username = "django_admin"
-  master_password = "ChangeMe12345!"
+  master_password = var.db_password
 }
 
 
