@@ -7,30 +7,6 @@ replicaCount: 1
 
 containerPort: 8000
 
-postgresql:
-  enabled: true
-
-  image:
-    tag: latest
-
-  primary:
-    networkPolicy:
-      enabled: true
-      allowExternal: false
-      extraIngress:
-        - ports:
-            - port: 5432
-          from:
-            - podSelector:
-                matchLabels:
-                  app: django-app
-
-  auth:
-    username: django
-    password: django_password
-    postgresPassword: postgres_password
-    database: django_db
-
 resources:
   requests:
     cpu: 100m
