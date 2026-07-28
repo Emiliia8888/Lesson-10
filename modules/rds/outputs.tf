@@ -20,3 +20,9 @@ output "db_subnet_group_name" {
   description = "RDS subnet group name"
   value       = aws_db_subnet_group.this.name
 }
+
+
+output "rds_instance_address" {
+  description = "RDS instance hostname without port"
+  value       = var.use_aurora ? null : aws_db_instance.this[0].address
+}

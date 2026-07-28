@@ -81,6 +81,8 @@ module "rds" {
   instance_class = "db.t3.micro"
   multi_az       = false
 
+  database_name   = "django"
+  master_username = "django_admin"
   master_password = "ChangeMe12345!"
 }
 
