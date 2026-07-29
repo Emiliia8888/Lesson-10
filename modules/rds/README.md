@@ -81,3 +81,24 @@ multi_az = true
 - `aurora_cluster_endpoint`
 - `database_security_group_id`
 - `db_subnet_group_name`
+
+## Variables
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| vpc_id | string | - | VPC ID for RDS |
+| private_subnets | list(string) | - | Private subnet IDs |
+| use_aurora | bool | false | Create Aurora instead of RDS |
+| engine | string | postgres | Database engine |
+| engine_version | string | 16 | Database engine version |
+| instance_class | string | db.t3.micro | Database instance class |
+| multi_az | bool | false | Enable Multi-AZ |
+| database_name | string | django | Initial database name |
+| master_username | string | django_admin | Database username |
+| backup_retention_period | number | 7 | Backup retention days |
+| backup_window | string | 03:00-04:00 | Backup window |
+| maintenance_window | string | sun:04:00-sun:05:00 | Maintenance window |
+| deletion_protection | bool | true | Enable deletion protection |
+| max_connections | string | 100 | PostgreSQL max connections |
+| log_statement | string | none | SQL logging |
+| work_mem | string | 4096 | PostgreSQL work memory |
