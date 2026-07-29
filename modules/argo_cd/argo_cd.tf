@@ -49,8 +49,8 @@ resource "helm_release" "django_app" {
   version   = "0.1.0"
   namespace = kubernetes_namespace_v1.argocd.metadata[0].name
 
-  wait    = true
-  timeout = 300
+  wait         = true
+  timeout      = 300
   force_update = true
 
   lifecycle {

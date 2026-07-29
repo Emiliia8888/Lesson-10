@@ -50,6 +50,11 @@ agent:
         serviceAccount: jenkins
 
         containers:
+          - name: git
+            image: alpine/git:latest
+            command: cat
+            ttyEnabled: true
+
           - name: kaniko
             image: gcr.io/kaniko-project/executor:latest
             command: /busybox/cat
