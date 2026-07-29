@@ -44,8 +44,9 @@ resource "aws_db_parameter_group" "this" {
   }
 
   parameter {
-    name  = "max_connections"
-    value = var.max_connections
+    name         = "max_connections"
+    value        = var.max_connections
+    apply_method = "pending-reboot"
   }
 
   parameter {
@@ -76,8 +77,9 @@ resource "aws_rds_cluster_parameter_group" "cluster" {
   }
 
   parameter {
-    name  = "max_connections"
-    value = var.max_connections
+    name         = "max_connections"
+    value        = var.max_connections
+    apply_method = "pending-reboot"
   }
 
   parameter {
