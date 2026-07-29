@@ -12,3 +12,6 @@ __pycache__/
 
 # Local Terraform variables
 *.tfvars
+Jenkinsfile.before-kaniko-irsa
+jenkins-jcasc-backup.yaml
+jenkins-jcasc-clean.yaml
