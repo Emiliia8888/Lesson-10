@@ -11,6 +11,11 @@ Resource type is controlled by `use_aurora`.
 - Creates DB Subnet Group automatically
 - Creates Security Group automatically
 - Creates Parameter Groups
+- Supports configurable PostgreSQL parameters:
+  - max_connections
+  - log_statement
+  - work_mem
+- Stores database credentials in AWS Secrets Manager
 - Supports RDS instance
 - Supports Aurora PostgreSQL cluster
 - Supports Multi-AZ
@@ -35,6 +40,7 @@ module "rds" {
 
   use_aurora = false
 }
+```
 
 ## Configuration Changes
 
