@@ -92,6 +92,24 @@ variable "parameter_group_family" {
   default     = "postgres16"
 }
 
+variable "max_connections" {
+  description = "Maximum number of database connections"
+  type        = string
+  default     = "100"
+}
+
+variable "log_statement" {
+  description = "SQL statement logging level"
+  type        = string
+  default     = "none"
+}
+
+variable "work_mem" {
+  description = "Memory used for query operations"
+  type        = string
+  default     = "4096"
+}
+
 variable "identifier" {
   description = "RDS instance identifier"
   type        = string

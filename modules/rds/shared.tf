@@ -43,6 +43,21 @@ resource "aws_db_parameter_group" "this" {
     value = "1"
   }
 
+  parameter {
+    name  = "max_connections"
+    value = var.max_connections
+  }
+
+  parameter {
+    name  = "log_statement"
+    value = var.log_statement
+  }
+
+  parameter {
+    name  = "work_mem"
+    value = var.work_mem
+  }
+
   tags = {
     Name = "django-rds-parameter-group"
   }
@@ -58,6 +73,21 @@ resource "aws_rds_cluster_parameter_group" "cluster" {
   parameter {
     name  = "log_connections"
     value = "1"
+  }
+
+  parameter {
+    name  = "max_connections"
+    value = var.max_connections
+  }
+
+  parameter {
+    name  = "log_statement"
+    value = var.log_statement
+  }
+
+  parameter {
+    name  = "work_mem"
+    value = var.work_mem
   }
 
   tags = {
