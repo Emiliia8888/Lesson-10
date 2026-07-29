@@ -175,7 +175,7 @@ spec:
 
                         rm -rf gitops-repo
 
-                        git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Emiliia8888/Lesson-8-9.git gitops-repo
+                        git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Emiliia8888/Lesson-10.git gitops-repo
 
                         cd gitops-repo
 
