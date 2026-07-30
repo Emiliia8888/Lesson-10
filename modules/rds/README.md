@@ -44,6 +44,31 @@ module "rds" {
 
 ## Configuration Changes
 
+### Switch between RDS and Aurora
+
+The module supports both a standard Amazon RDS instance and an Amazon Aurora PostgreSQL cluster.
+
+### Standard RDS
+
+Use the following configuration to create a regular PostgreSQL RDS instance:
+
+```hcl
+use_aurora = false
+engine      = "postgres"
+```
+
+### Aurora PostgreSQL
+
+Use the following configuration to create an Aurora PostgreSQL cluster with a writer instance:
+
+```hcl
+use_aurora = true
+engine      = "aurora-postgresql"
+```
+
+Only the `use_aurora` and `engine` variables need to be changed. All networking resources (DB Subnet Group, Security Group, and Parameter Group) are created automatically for the selected database type.
+
+
 ### Change engine
 
 ```hcl
