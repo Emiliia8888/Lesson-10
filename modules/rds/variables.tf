@@ -8,6 +8,18 @@ variable "private_subnets" {
   type        = list(string)
 }
 
+variable "allowed_cidr_blocks" {
+  description = "CIDR blocks allowed to access the database"
+  type        = list(string)
+  default     = ["10.0.0.0/16"]
+}
+
+variable "db_port" {
+  description = "Database port"
+  type        = number
+  default     = 5432
+}
+
 variable "use_aurora" {
   description = "Create Aurora cluster instead of standalone RDS instance"
   type        = bool
@@ -90,6 +102,12 @@ variable "parameter_group_family" {
   description = "Database parameter group family"
   type        = string
   default     = "postgres16"
+}
+
+variable "aurora_parameter_group_family" {
+  description = "Aurora cluster parameter group family"
+  type        = string
+  default     = "aurora-postgresql16"
 }
 
 variable "max_connections" {

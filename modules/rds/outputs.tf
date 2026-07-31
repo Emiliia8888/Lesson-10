@@ -26,3 +26,13 @@ output "rds_instance_address" {
   description = "RDS instance hostname without port"
   value       = var.use_aurora ? null : aws_db_instance.this[0].address
 }
+
+output "db_endpoint" {
+  description = "Database endpoint"
+  value       = var.use_aurora ? aws_rds_cluster.this[0].endpoint : aws_db_instance.this[0].endpoint
+}
+
+output "db_reader_endpoint" {
+  description = "Database reader endpoint"
+  value       = var.use_aurora ? aws_rds_cluster.this[0].reader_endpoint : null
+}

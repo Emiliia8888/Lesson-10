@@ -15,10 +15,10 @@ resource "aws_security_group" "this" {
 
   ingress {
     description = "PostgreSQL from VPC"
-    from_port   = 5432
-    to_port     = 5432
+    from_port   = var.db_port
+    to_port     = var.db_port
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
+    cidr_blocks = var.allowed_cidr_blocks
   }
 
   egress {
@@ -33,8 +33,8 @@ resource "aws_security_group" "this" {
   }
 }
 
-
 resource "aws_db_parameter_group" "this" {
+  count  = var.use_aurora ? 0 : 1
   name   = "django-rds-parameter-group"
   family = var.parameter_group_family
 
@@ -69,7 +69,7 @@ resource "aws_rds_cluster_parameter_group" "cluster" {
   count = var.use_aurora ? 1 : 0
 
   name   = "django-aurora-cluster-parameter-group"
-  family = var.parameter_group_family
+  family = var.aurora_parameter_group_family
 
   parameter {
     name  = "log_connections"
