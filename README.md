@@ -126,7 +126,7 @@ Application:
     django-app
 Git repository:
 
-    https://github.com/Emiliia8888/Lesson-8-9.git
+    https://github.com/Emiliia8888/Lesson-10.git
 Branch:
 
     main
@@ -150,7 +150,7 @@ Container image:
     034255117140.dkr.ecr.eu-central-1.amazonaws.com/django-app-gitops
 Current deployed image:
 
-    django-app-gitops:34
+    django-app-gitops:35
 Deployment includes:
 
     -Kubernetes Deployment
@@ -199,17 +199,16 @@ Implemented:
 ## Database
 
 ### PostgreSQL
-Current Django deployment uses PostgreSQL deployed through Helm dependency.
+Django application uses AWS RDS PostgreSQL.
+
 Implemented:
 
-    -PostgreSQL StatefulSet
-    -PersistentVolumeClaim
-    -gp3 StorageClass
-    -AWS EBS CSI integration
-
-Django database connection is configured through Kubernetes Secret:
-
-    django-postgresql
+    -Reusable Terraform RDS module
+    -AWS RDS PostgreSQL instance
+    -Private database networking
+    -AWS Secrets Manager integration
+    -External Secrets Operator
+    -Secure Kubernetes secret injection
 
 Environment variables:
 
