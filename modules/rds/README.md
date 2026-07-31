@@ -58,7 +58,7 @@ module "rds" {
 |---|---|---|---|
 | allowed_cidr_blocks | list(string) | ["10.0.0.0/16"] | CIDR blocks allowed to access database |
 | db_port | number | 5432 | Database port |
-| parameter_group_family | string | postgres16 | RDS parameter group family |
+| rds_parameter_group_family | string | postgres16 | RDS parameter group family |
 | aurora_parameter_group_family | string | aurora-postgresql16 | Aurora parameter group family |
 | use_aurora | bool | false | Create Aurora instead of RDS |
 | engine | string | postgres | Database engine |

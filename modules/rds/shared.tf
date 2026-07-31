@@ -36,7 +36,7 @@ resource "aws_security_group" "this" {
 resource "aws_db_parameter_group" "this" {
   count  = var.use_aurora ? 0 : 1
   name   = "django-rds-parameter-group"
-  family = var.parameter_group_family
+  family = var.rds_parameter_group_family
 
   parameter {
     name  = "log_connections"

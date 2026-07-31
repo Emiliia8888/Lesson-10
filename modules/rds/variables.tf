@@ -98,7 +98,7 @@ variable "skip_final_snapshot" {
   default     = false
 }
 
-variable "parameter_group_family" {
+variable "rds_parameter_group_family" {
   description = "Database parameter group family"
   type        = string
   default     = "postgres16"
