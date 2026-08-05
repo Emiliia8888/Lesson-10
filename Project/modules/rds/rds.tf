@@ -3,7 +3,7 @@ resource "aws_db_instance" "this" {
   count = var.use_aurora ? 0 : 1
 
 
-  identifier = var.name
+  identifier = coalesce(var.identifier, var.name)
 
 
   engine         = var.engine
@@ -35,7 +35,9 @@ resource "aws_db_instance" "this" {
   parameter_group_name = aws_db_parameter_group.this[0].name
 
 
-  skip_final_snapshot = true
+  skip_final_snapshot = var.skip_final_snapshot
+
+  deletion_protection = var.deletion_protection
 
 
   tags = {

@@ -19,13 +19,13 @@ resources:
 django:
   debug: "False"
   allowedHosts: "*"
-  secretKey: "django-insecure-yoursupersecretproductionkey"
+  secretKey: ""
 
 
 db:
   name: "django_db"
   user: "postgres"
-  password: "DjangoSecurePass2026"
+  password: ""
   host: "dev-django-db-rds.ctskymysi6zv.eu-central-1.rds.amazonaws.com"
   port: "5432"
 

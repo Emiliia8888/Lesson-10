@@ -12,7 +12,7 @@ resource "helm_release" "argo_cd" {
   version    = "7.7.16"
   namespace  = kubernetes_namespace_v1.argocd.metadata[0].name
 
-  values = [file("${path.module}/values/argocd-values.yaml")]
+  values = [file("${path.module}/../values/argocd-values.yaml")]
 }
 
 

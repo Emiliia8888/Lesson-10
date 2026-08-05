@@ -1,26 +1,43 @@
+# Terraform
 .terraform/
 *.tfstate
 *.tfstate.*
-.terraform.lock.hcl
-*.tfvars
-.venv/
-.DS_Store
-.terraform/
-*.tfstate
-*.tfstate.*
+*.tfplan
 crash.log
-
 *.tfvars
 *.tfvars.json
 
-.aws/
+# Якщо викладач НЕ вимагає lock-файл, залиш цей рядок.
+# Якщо вимагає — видали його і коміть .terraform.lock.hcl
+.terraform.lock.hcl
 
+# AWS / Kubernetes
+.aws/
 .kube/
 
+# Secrets
 .env
+*.pem
+*.key
 *.secret
+**/secret.yaml
 
+# Python
+.venv/
+__pycache__/
+
+# IDE
 .vscode/
 .idea/
 
+# macOS
 .DS_Store
+
+# Terraform plans
+*.txt
+tfplan*
+terraform.tfstate.empty-backup
+
+# Local variables
+terraform.tfvars
+terraform-state-backup.json

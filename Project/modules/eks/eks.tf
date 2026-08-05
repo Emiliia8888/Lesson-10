@@ -7,6 +7,23 @@ module "aws_eks" {
 
   cluster_endpoint_public_access = true
 
+  # Existing EKS cluster security group
+  create_cluster_security_group = false
+  cluster_security_group_id     = null
+  cluster_additional_security_group_ids = [
+    "sg-075ac93fc2d305bee"
+  ]
+
+  # Use existing EKS cluster security group imported into Terraform state
+
+  # Encrypt Kubernetes secrets in etcd using AWS KMS
+  cluster_encryption_config = {
+    resources = ["secrets"]
+  }
+
+  create_kms_key          = true
+  enable_kms_key_rotation = true
+
   vpc_id     = var.vpc_id
   subnet_ids = var.subnets
 
@@ -19,5 +36,5 @@ module "aws_eks" {
     }
   }
 
-  enable_cluster_creator_admin_permissions = true
+  enable_cluster_creator_admin_permissions = false
 }

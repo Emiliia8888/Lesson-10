@@ -1,0 +1,8 @@
+applications:
+  django:
+    enabled: true
+    name: django-app
+    namespace: default
+    repoURL: ""
+    targetRevision: main
+    path: kubernetes

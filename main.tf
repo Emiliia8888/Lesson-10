@@ -20,15 +20,19 @@ module "ecr" {
   repository_name = "django-app"
 
 }
+
 module "eks" {
 
   source = "./modules/eks"
 
-  environment = "dev"
+  environment = "django-gitops"
+
+  cluster_name = "django-gitops-cluster"
 
   subnet_ids = module.vpc.private_subnets
 
 }
+
 module "rds" {
 
   source = "./modules/rds"
@@ -66,4 +70,21 @@ module "rds" {
 
   allowed_security_groups = []
 
+}
+
+module "jenkins" {
+  source = "./modules/jenkins"
+
+  depends_on = [
+    module.eks
+  ]
+}
+
+
+module "argo_cd" {
+  source = "./modules/argo_cd"
+
+  depends_on = [
+    module.eks
+  ]
 }

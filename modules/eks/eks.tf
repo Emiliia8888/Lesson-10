@@ -1,5 +1,5 @@
 resource "aws_eks_cluster" "this" {
-  name                          = "${var.environment}-eks-cluster"
+  name                          = var.cluster_name
   role_arn                      = aws_iam_role.cluster.arn
   bootstrap_self_managed_addons = false
 

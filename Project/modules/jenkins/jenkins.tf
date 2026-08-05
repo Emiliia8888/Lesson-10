@@ -213,6 +213,8 @@ resource "kubernetes_service_v1" "jenkins" {
 
     type = "LoadBalancer"
 
+    load_balancer_class = "service.k8s.aws/nlb"
+
   }
 
 }

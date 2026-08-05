@@ -1,8 +1,49 @@
+# Terraform
 .terraform/
 *.tfstate
-*.tfstate.backup
+*.tfstate.*
 .terraform.lock.hcl
+
+# Terraform plans
+*.tfplan
+tfplan*
+*.plan
+*plan*.txt
+
+# Terraform variables
+*.tfvars
+*.tfvars.json
+
+# Terraform backups
+*.backup*
+terraform.tfstate.empty-backup
+
+# Logs
+*.log
+
+# Python
 .venv/
 __pycache__/
 *.pyc
+
+# Secrets
+.env
+*.pem
+*.key
+**/secret.yaml
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
 .DS_Store
+
+# Temporary / backup files
+*.before*
+state*.json
+route-tables.json
+state-*.txt
+
+# Terraform state lists
+final-state*.txt

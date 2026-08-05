@@ -2,16 +2,63 @@ pipeline {
 
     agent {
         kubernetes {
-            yaml
+            yaml """
 apiVersion: v1
 kind: Pod
+
 spec:
+
+  initContainers:
+
+  - name: ecr-login
+    image: amazon/aws-cli:latest
+    command:
+      - sh
+      - -c
+    args:
+      - |
+        aws ecr get-login-password --region eu-central-1 > /tmp/pass
+
+        mkdir -p /kaniko/.docker
+
+        AUTH=\$(echo -n AWS:\$(cat /tmp/pass) | base64)
+
+        cat > /kaniko/.docker/config.json <<EOF
+        {
+          "auths": {
+            "034255117140.dkr.ecr.eu-central-1.amazonaws.com": {
+              "username": "AWS",
+              "password": "\$(cat /tmp/pass)",
+              "auth": "\$AUTH"
+            }
+          }
+        }
+        EOF
+
+    env:
+
+    - name: AWS_REGION
+      value: eu-central-1
+
+    volumeMounts:
+
+    - name: docker-config
+      mountPath: /kaniko/.docker
+
+
   containers:
+
   - name: kaniko
     image: gcr.io/kaniko-project/executor:latest
     command:
       - /busybox/cat
     tty: true
+
+    volumeMounts:
+
+    - name: docker-config
+      mountPath: /kaniko/.docker
+
 
   - name: git
     image: alpine/git
@@ -19,23 +66,34 @@ spec:
       - cat
     tty: true
 
+
+  volumes:
+
+  - name: docker-config
+    emptyDir: {}
+
+"""
         }
     }
 
+
     environment {
 
-        AWS_REGION = "us-east-1"
+        AWS_REGION = "eu-central-1"
 
-        ECR_REPO = "034255117140.dkr.ecr.us-east-1.amazonaws.com/lesson-8-9"
+        ECR_REPO = "034255117140.dkr.ecr.eu-central-1.amazonaws.com/django-app-gitops"
 
         GIT_REPO = "https://github.com/Emiliia8888/Lesson-8-9.git"
 
         HELM_REPO = "https://github.com/Emiliia8888/helm-django.git"
 
         IMAGE_TAG = "${BUILD_NUMBER}"
+
     }
 
+
     stages {
+
 
         stage('Checkout Repository') {
 
@@ -52,9 +110,11 @@ spec:
                     ]) {
 
                         sh """
+
                         git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/Emiliia8888/Lesson-8-9.git .
 
                         git checkout main
+
                         """
 
                     }
@@ -64,6 +124,7 @@ spec:
             }
 
         }
+
 
         stage('Build Docker Image') {
 
@@ -71,33 +132,21 @@ spec:
 
                 container('kaniko') {
 
-                    withCredentials([
-                        [$class: 'AmazonWebServicesCredentialsBinding',
-                        credentialsId: 'aws-creds']
-                    ]) {
+                    sh """
 
-                        sh """
+                    /kaniko/executor \
+                      --context=dir://. \
+                      --dockerfile=Dockerfile \
+                      --destination=${ECR_REPO}:${IMAGE_TAG}
 
-                        mkdir -p /kaniko/.docker
-
-                        echo '{
-                          "credsStore":"ecr-login"
-                        }' > /kaniko/.docker/config.json
-
-                        /kaniko/executor \
-                          --context=dir://. \
-                          --dockerfile=Dockerfile \
-                          --destination=${ECR_REPO}:${IMAGE_TAG}
-
-                        """
-
-                    }
+                    """
 
                 }
 
             }
 
         }
+
 
         stage('Update Helm Values') {
 
@@ -119,18 +168,26 @@ spec:
 
                         git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/Emiliia8888/helm-django.git
 
+
                         cd helm-django
+
 
                         sed -i "s/tag:.*/tag: ${IMAGE_TAG}/g" charts/django-app/values.yaml
 
+
                         git config user.email "jenkins@example.com"
+
                         git config user.name "Jenkins"
+
 
                         git add charts/django-app/values.yaml
 
+
                         git commit -m "Update image tag ${IMAGE_TAG}" || true
 
+
                         git push origin main
+
 
                         """
 
@@ -142,7 +199,9 @@ spec:
 
         }
 
+
     }
+
 
     post {
 
@@ -151,6 +210,7 @@ spec:
             echo "Deployment update completed successfully"
 
         }
+
 
         failure {
 
